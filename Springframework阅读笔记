@@ -1,0 +1,118 @@
+#Spring IoC容器
+
+
+---------对象通过构造函数参数，工厂方法的参数或在工厂方法构造或返回的对象实例上设置的属性来定义它们的依赖关系，即它们所处理的其他对象。然后容器 在创建bean时注入这些依赖关系。这个过程基本上是相反的，因此名为控制反转（IoC），通过使用类的直接构造或诸如Service Locator模式之类的机制来控制其依赖关系的实例化或位置的bean本身。
+
+> **概述**
+> ApplicationContext接口表示Spring IOC容器，负责实例化，配置和组装bean。容器通过读取配置元数据获取对象的实例化，配置和组装。配置元数据以XML，Java注释或Java代码表示。它允许你表达组成你的应用程序的对象以及这些对象之间丰富的相互依赖关系。
+
+
+
+----------
+
+> **配置元数据**
+> 基于注释的配置：Spring 2.5引入了对基于注释的配置元数据的支持。
+ > 基于Java的配置：从Spring 3.0开始，Spring JavaConfig项目提供的许多功能成为核心Spring框架的一部分。因此，您可以使用Java而不是XML文件来定义应用程序类外部的Bean
+	 Spring配置容器通常由多个bean定义组成。基于XML的配置元数据将这些bean配置为<bean/>顶层元素内的<beans/>元素。Java配置通常使用类中的@Bean注释方法@Configuration。
+bean定义对应于组成应用程序的实际对象。您可以定义服务层对象，数据访问对象（DAO），Struts Action实例等表示对象，Hibernate SessionFactories，JMS 等基础结构对象 Queues
+
+> id属性是一个字符串，用于标识各个bean的定义。该class属性定义了bean的类型并使用完全限定的类名。id属性的值是指协作对象。
+
+        <bean id="..." class="...">
+                <!-- collaborators and configuration for this bean go here -->
+        </bean>
+
+        <bean id="..." class="...">
+                <!-- collaborators and configuration for this bean go here -->
+        </bean>
+
+        <!-- more bean definitions go here -->
+
+</beans>
+
+
+ 
+> **实例化容器**
+> `ApplicationContext context = new ClassPathXmlApplicationContext("services.xml", "daos.xml");`
+> 配置文件
+> services.xml
+
+
+        <!-- services -->
+
+        <bean id="petStore" class="org.springframework.samples.jpetstore.services.PetStoreServiceImpl">
+                <property name="accountDao" ref="accountDao"/>
+                <property name="itemDao" ref="itemDao"/>
+                <!-- additional collaborators and configuration for this bean go here -->
+        </bean>
+
+        <!-- more bean definitions for services go here -->
+
+</beans>
+
+> daos.xml
+
+
+        <bean id="accountDao"
+                class="org.springframework.samples.jpetstore.dao.jpa.JpaAccountDao">
+                <!-- additional collaborators and configuration for this bean go here -->
+        </bean>
+
+        <bean id="itemDao" class="org.springframework.samples.jpetstore.dao.jpa.JpaItemDao">
+                <!-- additional collaborators and configuration for this bean go here -->
+        </bean>
+
+        <!-- more bean definitions for data access objects go here -->
+
+</beans>
+
+
+>使用一个或多个import元素来从另一个或多个文件加载bean定义。import指令是bean名称空间本身提供的一个功能。
+<beans>
+        <import resource="services.xml"/>
+        <import resource="resources/messageSource.xml"/>
+        <import resource="/resources/themeSource.xml"/>
+
+        <bean id="bean1" class="..."/>
+        <bean id="bean2" class="..."/>
+</beans>
+ 
+
+> **Groovy Bean定义DSL**
+
+```
+beans {
+    dataSource(BasicDataSource) {
+        driverClassName = "org.hsqldb.jdbcDriver"
+        url = "jdbc:hsqldb:mem:grailsDB"
+        username = "sa"
+        password = ""
+        settings = [mynew:"setting"]
+    }
+    sessionFactory(SessionFactory) {
+        dataSource = dataSource
+    }
+    myService(MyService) {
+        nestedBean = { AnotherBean bean ->
+            dataSource = dataSource
+        }
+    }
+}
+```
+
+> **使用容器**
+> ApplicationContext是高级工厂的接口，能够维护不同的bean及其依赖项的注册表
+> 在ApplicationContext可以读取bean定义并访问它们
+ `// create and configure beans
+ApplicationContext context = new ClassPathXmlApplicationContext("services.xml", "daos.xml");
+
+// retrieve configured instance
+PetStoreService service = context.getBean("petStore", PetStoreService.class);
+
+// use configured instance
+List<String> userList = service.getUsernameList();`
+
+
+
+    ApplicationContext context = new GenericGroovyApplicationContext("services.groovy", "daos.groovy");
+
